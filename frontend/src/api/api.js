@@ -19,6 +19,29 @@ export async function fetchOrders() {
   return res.json();
 }
 
+export async function createProduct(productData) {
+  try {
+    const res = await fetch(`${API_BASE}products/create/`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(productData),
+    });
+    
+    const responseData = await res.json().catch(() => ({}));
+    
+    if (!res.ok) {
+      throw new Error(responseData.error || responseData.detail || `Failed to create product (${res.status})`);
+    }
+    
+    return responseData;
+  } catch (error) {
+    if (error.message) {
+      throw error;
+    }
+    throw new Error(`Network error: ${error.message || 'Could not connect to server'}`);
+  }
+}
+
 export async function createOrder(items, customerInfo) {
   try {
     const requestBody = { 

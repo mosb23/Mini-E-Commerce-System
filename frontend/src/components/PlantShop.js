@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { ShoppingCart, Menu, X, Star, Mail, Phone } from 'lucide-react';
 import { createOrder, fetchProducts } from '../api/api';
 
-export default function PlantShop() {
+export default function PlantShop({ onShowAdmin }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [cart, setCart] = useState([]);
   const [cartOpen, setCartOpen] = useState(false);
@@ -212,8 +212,16 @@ export default function PlantShop() {
               <button onClick={() => scrollToSection('contact')} className="text-gray-600 hover:text-green-600 font-medium">Contact</button>
             </nav>
 
-            {/* Cart Icon */}
+            {/* Cart Icon & Admin */}
             <div className="flex items-center space-x-4">
+              {onShowAdmin && (
+                <button 
+                  onClick={onShowAdmin} 
+                  className="hidden md:block text-sm text-gray-600 hover:text-green-600 font-medium px-3 py-1 border border-gray-300 rounded-md hover:border-green-600 transition-colors"
+                >
+                  Admin
+                </button>
+              )}
               <button onClick={() => setCartOpen(!cartOpen)} className="relative text-gray-600 hover:text-green-600">
                 <ShoppingCart className="h-6 w-6" />
                 {cart.length > 0 && (
@@ -239,6 +247,9 @@ export default function PlantShop() {
               <button onClick={() => scrollToSection('shop')} className="block text-gray-600 hover:text-green-600 font-medium w-full text-left">Shop</button>
               <button onClick={() => scrollToSection('about')} className="block text-gray-600 hover:text-green-600 font-medium w-full text-left">About</button>
               <button onClick={() => scrollToSection('contact')} className="block text-gray-600 hover:text-green-600 font-medium w-full text-left">Contact</button>
+              {onShowAdmin && (
+                <button onClick={onShowAdmin} className="block text-gray-600 hover:text-green-600 font-medium w-full text-left border-t border-gray-200 pt-3 mt-3">Admin Panel</button>
+              )}
             </nav>
           </div>
         )}

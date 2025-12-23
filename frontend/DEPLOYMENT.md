@@ -54,9 +54,14 @@ REACT_APP_API_URL=http://127.0.0.1:8000/api/
 
 ### Example Render Backend URLs
 
-If your Render backend service is named `mini-ecommerce-backend`, your API URL would be:
+Your deployed backend URL:
 ```
-REACT_APP_API_URL=https://mini-ecommerce-backend.onrender.com/api/
+REACT_APP_API_URL=https://mini-e-commerce-system.onrender.com/api/
+```
+
+**Note**: The default fallback URL in `api.js` is now set to your Render backend. For local development, create a `.env` file with:
+```
+REACT_APP_API_URL=http://127.0.0.1:8000/api/
 ```
 
 ### Verifying the Configuration

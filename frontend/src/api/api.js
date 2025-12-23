@@ -1,5 +1,5 @@
-// Use environment variable for API base URL, fallback to localhost for development
-const API_BASE = process.env.REACT_APP_API_URL || "http://127.0.0.1:8000/api/";
+// Use environment variable for API base URL, fallback to Render backend for production
+const API_BASE = process.env.REACT_APP_API_URL || "https://mini-e-commerce-system.onrender.com/api/";
 
 export async function fetchProducts() {
   const res = await fetch(`${API_BASE}products/`);

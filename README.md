@@ -2,6 +2,8 @@
 
 A full-stack e-commerce application built with Django REST Framework backend and React frontend. This system allows users to browse products, manage inventory, and place orders with customer information tracking.
 
+🌐 **Live Website**: [https://mini-e-commerce-system-1.onrender.com/](https://mini-e-commerce-system-1.onrender.com/)
+
 ## Project Description
 
 This Mini E-Commerce System is a complete web application that demonstrates a modern e-commerce workflow. The application features:
@@ -136,6 +138,27 @@ All API endpoints are prefixed with `/api/`. The base URL is `http://127.0.0.1:8
 ```
 - **Response**: Created product object with status 201
 
+#### Update Product
+- **Endpoint**: `PUT /api/products/<id>/`
+- **Description**: Update an existing product (Admin operation)
+- **Parameters**: `id` (integer) - Product ID
+- **Request Body**:
+```json
+{
+  "name": "Updated Product Name",
+  "description": "Updated description",
+  "price": "49.99",
+  "stock": 75
+}
+```
+- **Response**: Updated product object
+
+#### Delete Product
+- **Endpoint**: `DELETE /api/products/<id>/`
+- **Description**: Delete a product (Admin operation)
+- **Parameters**: `id` (integer) - Product ID
+- **Response**: Status 204 (No Content) on success
+
 ### Orders
 
 #### Get All Orders
@@ -152,6 +175,7 @@ All API endpoints are prefixed with `/api/`. The base URL is `http://127.0.0.1:8
     "customer_name": "John Doe",
     "customer_phone": "1234567890",
     "customer_address": "123 Main St, City, Country",
+    "status": "pending",
     "items": [
       {
         "id": 1,
@@ -193,6 +217,31 @@ All API endpoints are prefixed with `/api/`. The base URL is `http://127.0.0.1:8
   "error": "Insufficient stock for Product Name. Available: 5, Requested: 10"
 }
 ```
+
+#### Get Order Details
+- **Endpoint**: `GET /api/orders/<id>/`
+- **Description**: Retrieve detailed information about a specific order
+- **Parameters**: `id` (integer) - Order ID
+- **Response**: Single order object with items and customer information
+
+#### Update Order Status
+- **Endpoint**: `PATCH /api/orders/<id>/`
+- **Description**: Update order status (Admin operation)
+- **Parameters**: `id` (integer) - Order ID
+- **Request Body**:
+```json
+{
+  "status": "completed"
+}
+```
+- **Status Options**: `pending`, `completed`, `cancelled`
+- **Response**: Updated order object
+
+#### Delete Order
+- **Endpoint**: `DELETE /api/orders/<id>/`
+- **Description**: Delete an order (Admin operation)
+- **Parameters**: `id` (integer) - Order ID
+- **Response**: Status 204 (No Content) on success
 
 ### Admin Panel
 - **Endpoint**: `GET /admin/`
@@ -272,6 +321,26 @@ The frontend will be available at `http://localhost:3000/`
 - ✅ RESTful API architecture
 - ✅ Responsive UI design
 - ✅ CORS enabled for frontend-backend communication
+- ✅ Admin panel for product and order management
+- ✅ Product CRUD operations (Create, Read, Update, Delete)
+- ✅ Order status management (Pending, Completed, Cancelled)
+- ✅ Real-time stock updates
+
+## Live Demo
+
+🌐 **Website**: [https://mini-e-commerce-system-1.onrender.com/](https://mini-e-commerce-system-1.onrender.com/)
+
+Visit the live website to explore the e-commerce system, browse products, and test the admin panel features.
+
+## Group Members
+
+- **Mohamed Ahmed Mohamed Ali**
+- **Retaj Ahmed Mohamed**
+
+## Video Demo
+
+Watch the project demonstration video:
+[Video Demo Link](https://drive.google.com/drive/u/3/folders/1IYqnnPBJ3cDVOoLEQrK-3kVuv4rMgcZe)
 
 ## License
 

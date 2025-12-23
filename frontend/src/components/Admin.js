@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { fetchProducts, fetchOrders, createProduct } from '../api/api';
-import { ArrowLeft, Plus, Package, ShoppingBag } from 'lucide-react';
+import { fetchProducts, fetchOrders, createProduct, updateProduct, deleteProduct, updateOrderStatus, deleteOrder } from '../api/api';
+import { ArrowLeft, Plus, Package, ShoppingBag, Edit, Trash2, CheckCircle, XCircle } from 'lucide-react';
 
 export default function Admin({ onBack }) {
   const [activeTab, setActiveTab] = useState('products'); // 'products' or 'orders'
@@ -17,6 +17,19 @@ export default function Admin({ onBack }) {
     price: '',
     stock: ''
   });
+  
+  // Edit product state
+  const [editingProduct, setEditingProduct] = useState(null);
+  const [editForm, setEditForm] = useState({
+    name: '',
+    description: '',
+    price: '',
+    stock: ''
+  });
+  
+  // Stock update state
+  const [updatingStock, setUpdatingStock] = useState(null);
+  const [newStock, setNewStock] = useState('');
 
   // Fetch products
   useEffect(() => {
@@ -84,6 +97,125 @@ export default function Admin({ onBack }) {
       loadProducts(); // Refresh products list
     } catch (err) {
       setError(err.message || 'Failed to create product');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleEditProduct = (product) => {
+    setEditingProduct(product.id);
+    setEditForm({
+      name: product.name,
+      description: product.description,
+      price: product.price,
+      stock: product.stock
+    });
+  };
+
+  const handleUpdateProduct = async (id) => {
+    setError(null);
+    setSuccess(null);
+
+    try {
+      setLoading(true);
+      const productData = {
+        name: editForm.name,
+        description: editForm.description,
+        price: parseFloat(editForm.price),
+        stock: parseInt(editForm.stock)
+      };
+
+      await updateProduct(id, productData);
+      setSuccess('Product updated successfully!');
+      setEditingProduct(null);
+      loadProducts();
+    } catch (err) {
+      setError(err.message || 'Failed to update product');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDeleteProduct = async (id) => {
+    if (!window.confirm('Are you sure you want to delete this product?')) {
+      return;
+    }
+
+    setError(null);
+    setSuccess(null);
+
+    try {
+      setLoading(true);
+      await deleteProduct(id);
+      setSuccess('Product deleted successfully!');
+      loadProducts();
+    } catch (err) {
+      setError(err.message || 'Failed to delete product');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleUpdateStock = async (id, currentStock) => {
+    if (!newStock || isNaN(newStock) || parseInt(newStock) < 0) {
+      setError('Please enter a valid stock number');
+      return;
+    }
+
+    setError(null);
+    setSuccess(null);
+
+    try {
+      setLoading(true);
+      const product = products.find(p => p.id === id);
+      await updateProduct(id, {
+        name: product.name,
+        description: product.description,
+        price: parseFloat(product.price),
+        stock: parseInt(newStock)
+      });
+      setSuccess('Stock updated successfully!');
+      setUpdatingStock(null);
+      setNewStock('');
+      loadProducts();
+    } catch (err) {
+      setError(err.message || 'Failed to update stock');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleOrderStatusUpdate = async (id, status) => {
+    setError(null);
+    setSuccess(null);
+
+    try {
+      setLoading(true);
+      await updateOrderStatus(id, status);
+      setSuccess(`Order ${status === 'completed' ? 'completed' : 'cancelled'} successfully!`);
+      loadOrders();
+    } catch (err) {
+      setError(err.message || 'Failed to update order status');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDeleteOrder = async (id) => {
+    if (!window.confirm('Are you sure you want to delete this order?')) {
+      return;
+    }
+
+    setError(null);
+    setSuccess(null);
+
+    try {
+      setLoading(true);
+      await deleteOrder(id);
+      setSuccess('Order deleted successfully!');
+      loadOrders();
+    } catch (err) {
+      setError(err.message || 'Failed to delete order');
     } finally {
       setLoading(false);
     }
@@ -258,6 +390,9 @@ export default function Admin({ onBack }) {
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                           Stock
                         </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Actions
+                        </th>
                       </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
@@ -267,16 +402,126 @@ export default function Admin({ onBack }) {
                             #{product.id}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                            {product.name}
+                            {editingProduct === product.id ? (
+                              <input
+                                type="text"
+                                value={editForm.name}
+                                onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
+                                className="w-full px-2 py-1 border border-gray-300 rounded text-sm"
+                              />
+                            ) : (
+                              product.name
+                            )}
                           </td>
                           <td className="px-6 py-4 text-sm text-gray-500">
-                            {product.description}
+                            {editingProduct === product.id ? (
+                              <textarea
+                                value={editForm.description}
+                                onChange={(e) => setEditForm({ ...editForm, description: e.target.value })}
+                                className="w-full px-2 py-1 border border-gray-300 rounded text-sm"
+                                rows="2"
+                              />
+                            ) : (
+                              product.description
+                            )}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            {parseFloat(product.price).toFixed(2)} EGP
+                            {editingProduct === product.id ? (
+                              <input
+                                type="number"
+                                step="0.01"
+                                value={editForm.price}
+                                onChange={(e) => setEditForm({ ...editForm, price: e.target.value })}
+                                className="w-full px-2 py-1 border border-gray-300 rounded text-sm"
+                              />
+                            ) : (
+                              `${parseFloat(product.price).toFixed(2)} EGP`
+                            )}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            {product.stock}
+                            {updatingStock === product.id ? (
+                              <div className="flex items-center gap-2">
+                                <input
+                                  type="number"
+                                  value={newStock}
+                                  onChange={(e) => setNewStock(e.target.value)}
+                                  className="w-20 px-2 py-1 border border-gray-300 rounded text-sm"
+                                  placeholder={product.stock}
+                                />
+                                <button
+                                  onClick={() => handleUpdateStock(product.id, product.stock)}
+                                  className="text-green-600 hover:text-green-700 text-xs"
+                                  disabled={loading}
+                                >
+                                  Save
+                                </button>
+                                <button
+                                  onClick={() => {
+                                    setUpdatingStock(null);
+                                    setNewStock('');
+                                  }}
+                                  className="text-gray-600 hover:text-gray-700 text-xs"
+                                >
+                                  Cancel
+                                </button>
+                              </div>
+                            ) : editingProduct === product.id ? (
+                              <input
+                                type="number"
+                                value={editForm.stock}
+                                onChange={(e) => setEditForm({ ...editForm, stock: e.target.value })}
+                                className="w-20 px-2 py-1 border border-gray-300 rounded text-sm"
+                              />
+                            ) : (
+                              <span className="cursor-pointer hover:text-green-600" onClick={() => {
+                                setUpdatingStock(product.id);
+                                setNewStock(product.stock);
+                              }}>
+                                {product.stock}
+                              </span>
+                            )}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm">
+                            {editingProduct === product.id ? (
+                              <div className="flex items-center gap-2">
+                                <button
+                                  onClick={() => handleUpdateProduct(product.id)}
+                                  className="text-green-600 hover:text-green-700"
+                                  disabled={loading}
+                                  title="Save"
+                                >
+                                  <CheckCircle className="w-5 h-5" />
+                                </button>
+                                <button
+                                  onClick={() => {
+                                    setEditingProduct(null);
+                                    setEditForm({ name: '', description: '', price: '', stock: '' });
+                                  }}
+                                  className="text-gray-600 hover:text-gray-700"
+                                  title="Cancel"
+                                >
+                                  <XCircle className="w-5 h-5" />
+                                </button>
+                              </div>
+                            ) : (
+                              <div className="flex items-center gap-2">
+                                <button
+                                  onClick={() => handleEditProduct(product)}
+                                  className="text-blue-600 hover:text-blue-700"
+                                  title="Edit"
+                                >
+                                  <Edit className="w-5 h-5" />
+                                </button>
+                                <button
+                                  onClick={() => handleDeleteProduct(product.id)}
+                                  className="text-red-600 hover:text-red-700"
+                                  title="Delete"
+                                  disabled={loading}
+                                >
+                                  <Trash2 className="w-5 h-5" />
+                                </button>
+                              </div>
+                            )}
                           </td>
                         </tr>
                       ))}
@@ -301,8 +546,19 @@ export default function Admin({ onBack }) {
                 {orders.map((order) => (
                   <div key={order.id} className="border border-gray-200 rounded-lg p-6">
                     <div className="flex flex-col md:flex-row md:justify-between md:items-start mb-4">
-                      <div>
-                        <h3 className="text-lg font-bold text-gray-900 mb-2">Order #{order.id}</h3>
+                      <div className="flex-1">
+                        <div className="flex items-center gap-3 mb-2">
+                          <h3 className="text-lg font-bold text-gray-900">Order #{order.id}</h3>
+                          <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+                            order.status === 'completed' 
+                              ? 'bg-green-100 text-green-800' 
+                              : order.status === 'cancelled'
+                              ? 'bg-red-100 text-red-800'
+                              : 'bg-yellow-100 text-yellow-800'
+                          }`}>
+                            {order.status || 'pending'}
+                          </span>
+                        </div>
                         <p className="text-sm text-gray-600">
                           Date: {new Date(order.created_at).toLocaleDateString('en-US', { 
                             year: 'numeric', 
@@ -313,10 +569,43 @@ export default function Admin({ onBack }) {
                           })}
                         </p>
                       </div>
-                      <div className="mt-2 md:mt-0">
+                      <div className="mt-2 md:mt-0 flex flex-col items-end gap-2">
                         <p className="text-2xl font-bold text-green-600">
                           {parseFloat(order.total_price).toFixed(2)} EGP
                         </p>
+                        <div className="flex items-center gap-2">
+                          {order.status !== 'completed' && (
+                            <button
+                              onClick={() => handleOrderStatusUpdate(order.id, 'completed')}
+                              className="flex items-center gap-1 px-3 py-1 bg-green-600 text-white text-xs rounded hover:bg-green-700 transition-colors"
+                              disabled={loading}
+                              title="Mark as Completed"
+                            >
+                              <CheckCircle className="w-4 h-4" />
+                              Complete
+                            </button>
+                          )}
+                          {order.status !== 'cancelled' && (
+                            <button
+                              onClick={() => handleOrderStatusUpdate(order.id, 'cancelled')}
+                              className="flex items-center gap-1 px-3 py-1 bg-orange-600 text-white text-xs rounded hover:bg-orange-700 transition-colors"
+                              disabled={loading}
+                              title="Cancel Order"
+                            >
+                              <XCircle className="w-4 h-4" />
+                              Cancel
+                            </button>
+                          )}
+                          <button
+                            onClick={() => handleDeleteOrder(order.id)}
+                            className="flex items-center gap-1 px-3 py-1 bg-red-600 text-white text-xs rounded hover:bg-red-700 transition-colors"
+                            disabled={loading}
+                            title="Delete Order"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                            Delete
+                          </button>
+                        </div>
                       </div>
                     </div>
                     

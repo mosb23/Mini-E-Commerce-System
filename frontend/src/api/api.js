@@ -42,6 +42,92 @@ export async function createProduct(productData) {
   }
 }
 
+export async function updateProduct(id, productData) {
+  try {
+    const res = await fetch(`${API_BASE}products/${id}/`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(productData),
+    });
+    
+    const responseData = await res.json().catch(() => ({}));
+    
+    if (!res.ok) {
+      throw new Error(responseData.error || responseData.detail || `Failed to update product (${res.status})`);
+    }
+    
+    return responseData;
+  } catch (error) {
+    if (error.message) {
+      throw error;
+    }
+    throw new Error(`Network error: ${error.message || 'Could not connect to server'}`);
+  }
+}
+
+export async function deleteProduct(id) {
+  try {
+    const res = await fetch(`${API_BASE}products/${id}/`, {
+      method: "DELETE",
+    });
+    
+    if (!res.ok) {
+      const responseData = await res.json().catch(() => ({}));
+      throw new Error(responseData.error || responseData.detail || `Failed to delete product (${res.status})`);
+    }
+    
+    return true;
+  } catch (error) {
+    if (error.message) {
+      throw error;
+    }
+    throw new Error(`Network error: ${error.message || 'Could not connect to server'}`);
+  }
+}
+
+export async function updateOrderStatus(id, status) {
+  try {
+    const res = await fetch(`${API_BASE}orders/${id}/`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status }),
+    });
+    
+    const responseData = await res.json().catch(() => ({}));
+    
+    if (!res.ok) {
+      throw new Error(responseData.error || responseData.detail || `Failed to update order (${res.status})`);
+    }
+    
+    return responseData;
+  } catch (error) {
+    if (error.message) {
+      throw error;
+    }
+    throw new Error(`Network error: ${error.message || 'Could not connect to server'}`);
+  }
+}
+
+export async function deleteOrder(id) {
+  try {
+    const res = await fetch(`${API_BASE}orders/${id}/`, {
+      method: "DELETE",
+    });
+    
+    if (!res.ok) {
+      const responseData = await res.json().catch(() => ({}));
+      throw new Error(responseData.error || responseData.detail || `Failed to delete order (${res.status})`);
+    }
+    
+    return true;
+  } catch (error) {
+    if (error.message) {
+      throw error;
+    }
+    throw new Error(`Network error: ${error.message || 'Could not connect to server'}`);
+  }
+}
+
 export async function createOrder(items, customerInfo) {
   try {
     const requestBody = { 

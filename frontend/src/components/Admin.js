@@ -3,6 +3,13 @@ import { fetchProducts, fetchOrders, createProduct, updateProduct, deleteProduct
 import { ArrowLeft, Plus, Package, ShoppingBag, Edit, Trash2, CheckCircle, XCircle } from 'lucide-react';
 
 export default function Admin({ onBack }) {
+  const [isAuthenticated, setIsAuthenticated] = useState(() => {
+    // Check if user is already authenticated (from sessionStorage)
+    return sessionStorage.getItem('adminAuthenticated') === 'true';
+  });
+  const [password, setPassword] = useState('');
+  const [passwordError, setPasswordError] = useState('');
+  
   const [activeTab, setActiveTab] = useState('products'); // 'products' or 'orders'
   const [products, setProducts] = useState([]);
   const [orders, setOrders] = useState([]);
@@ -33,15 +40,36 @@ export default function Admin({ onBack }) {
 
   // Fetch products
   useEffect(() => {
-    loadProducts();
-  }, []);
+    if (isAuthenticated) {
+      loadProducts();
+    }
+  }, [isAuthenticated]);
 
   // Fetch orders when orders tab is active
   useEffect(() => {
-    if (activeTab === 'orders') {
+    if (isAuthenticated && activeTab === 'orders') {
       loadOrders();
     }
-  }, [activeTab]);
+  }, [activeTab, isAuthenticated]);
+
+  const handleLogin = (e) => {
+    e.preventDefault();
+    setPasswordError('');
+    
+    if (password === '2612') {
+      setIsAuthenticated(true);
+      sessionStorage.setItem('adminAuthenticated', 'true');
+      setPassword('');
+    } else {
+      setPasswordError('Incorrect password. Please try again.');
+      setPassword('');
+    }
+  };
+
+  const handleLogout = () => {
+    setIsAuthenticated(false);
+    sessionStorage.removeItem('adminAuthenticated');
+  };
 
   const loadProducts = async () => {
     try {
@@ -221,6 +249,60 @@ export default function Admin({ onBack }) {
     }
   };
 
+  // Login Screen
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="max-w-md w-full bg-white rounded-lg shadow-md p-8">
+          <div className="text-center mb-6">
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">Admin Panel</h1>
+            <p className="text-gray-600">Please enter the password to access the admin panel</p>
+          </div>
+          
+          <form onSubmit={handleLogin} className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Password
+              </label>
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => {
+                  setPassword(e.target.value);
+                  setPasswordError('');
+                }}
+                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                placeholder="Enter password"
+                autoFocus
+              />
+              {passwordError && (
+                <p className="mt-2 text-sm text-red-600">{passwordError}</p>
+              )}
+            </div>
+            
+            <button
+              type="submit"
+              className="w-full bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700 transition-colors"
+            >
+              Login
+            </button>
+            
+            {onBack && (
+              <button
+                type="button"
+                onClick={onBack}
+                className="w-full flex items-center justify-center gap-2 text-gray-600 hover:text-gray-900 transition-colors mt-2"
+              >
+                <ArrowLeft className="w-5 h-5" />
+                Back to Shop
+              </button>
+            )}
+          </form>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
@@ -228,15 +310,23 @@ export default function Admin({ onBack }) {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center justify-between">
             <h1 className="text-2xl font-bold text-gray-900">Admin Panel</h1>
-            {onBack && (
+            <div className="flex items-center gap-4">
               <button
-                onClick={onBack}
-                className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors"
+                onClick={handleLogout}
+                className="text-sm text-gray-600 hover:text-gray-900 transition-colors"
               >
-                <ArrowLeft className="w-5 h-5" />
-                Back to Shop
+                Logout
               </button>
-            )}
+              {onBack && (
+                <button
+                  onClick={onBack}
+                  className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors"
+                >
+                  <ArrowLeft className="w-5 h-5" />
+                  Back to Shop
+                </button>
+              )}
+            </div>
           </div>
         </div>
       </header>

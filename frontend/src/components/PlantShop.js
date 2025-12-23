@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { ShoppingCart, Menu, X, Star, Mail, Phone } from 'lucide-react';
-import { createOrder, fetchProducts, fetchOrders } from '../api/api';
+import { createOrder, fetchProducts } from '../api/api';
 
 export default function PlantShop() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -11,10 +11,6 @@ export default function PlantShop() {
   const [products, setProducts] = useState([]);
   const [productsLoading, setProductsLoading] = useState(true);
   const [productsError, setProductsError] = useState(null);
-  const [orders, setOrders] = useState([]);
-  const [ordersLoading, setOrdersLoading] = useState(false);
-  const [ordersError, setOrdersError] = useState(null);
-  const [showOrders, setShowOrders] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [showProductModal, setShowProductModal] = useState(false);
   const [customerInfo, setCustomerInfo] = useState({
@@ -66,29 +62,6 @@ export default function PlantShop() {
     loadProducts();
   }, []);
 
-  // Fetch orders from backend
-  useEffect(() => {
-    const loadOrders = async () => {
-      if (!showOrders) return; // Only fetch when orders section is visible
-      
-      try {
-        setOrdersLoading(true);
-        setOrdersError(null);
-        const data = await fetchOrders();
-        // Sort orders by created_at descending (newest first)
-        const sortedOrders = data.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-        setOrders(sortedOrders);
-      } catch (error) {
-        console.error('Error fetching orders:', error);
-        setOrdersError(error.message || 'Failed to load orders');
-        setOrders([]);
-      } finally {
-        setOrdersLoading(false);
-      }
-    };
-
-    loadOrders();
-  }, [showOrders]);
 
   const scrollToSection = (sectionId) => {
     const element = document.getElementById(sectionId);
@@ -202,12 +175,6 @@ export default function PlantShop() {
         console.error('Error refreshing products:', error);
       }
       
-      // Refresh orders if orders section is visible
-      if (showOrders) {
-        const data = await fetchOrders();
-        const sortedOrders = data.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-        setOrders(sortedOrders);
-      }
     } catch (error) {
       console.error('Checkout error:', error);
       const errorMessage = error.message || "Failed to place order. Please try again.";
@@ -268,11 +235,10 @@ export default function PlantShop() {
         {mobileMenuOpen && (
           <div className="md:hidden border-t border-gray-200">
             <nav className="px-4 py-4 space-y-3">
-              <button onClick={() => { setShowOrders(false); scrollToSection('home'); }} className="block text-gray-900 hover:text-green-600 font-medium w-full text-left">Home</button>
-              <button onClick={() => { setShowOrders(false); scrollToSection('shop'); }} className="block text-gray-600 hover:text-green-600 font-medium w-full text-left">Shop</button>
-              <button onClick={() => { setShowOrders(false); scrollToSection('about'); }} className="block text-gray-600 hover:text-green-600 font-medium w-full text-left">About</button>
-              <button onClick={() => { setShowOrders(true); scrollToSection('orders'); }} className="block text-gray-600 hover:text-green-600 font-medium w-full text-left">Orders</button>
-              <button onClick={() => { setShowOrders(false); scrollToSection('contact'); }} className="block text-gray-600 hover:text-green-600 font-medium w-full text-left">Contact</button>
+              <button onClick={() => scrollToSection('home')} className="block text-gray-900 hover:text-green-600 font-medium w-full text-left">Home</button>
+              <button onClick={() => scrollToSection('shop')} className="block text-gray-600 hover:text-green-600 font-medium w-full text-left">Shop</button>
+              <button onClick={() => scrollToSection('about')} className="block text-gray-600 hover:text-green-600 font-medium w-full text-left">About</button>
+              <button onClick={() => scrollToSection('contact')} className="block text-gray-600 hover:text-green-600 font-medium w-full text-left">Contact</button>
             </nav>
           </div>
         )}
@@ -449,91 +415,6 @@ export default function PlantShop() {
         </div>
       </section>
 
-      {/* Orders Section */}
-      <section id="orders" className="py-16 bg-gray-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-3xl font-bold text-gray-900 text-center mb-12">All Orders</h2>
-          {ordersLoading ? (
-            <div className="text-center py-12">
-              <p className="text-gray-600">Loading orders...</p>
-            </div>
-          ) : ordersError ? (
-            <div className="text-center py-12">
-              <p className="text-red-600 mb-4">Error: {ordersError}</p>
-              <p className="text-gray-600 text-sm">Please make sure the backend server is running.</p>
-            </div>
-          ) : orders.length === 0 ? (
-            <div className="text-center py-12">
-              <p className="text-gray-600">No orders found. Start shopping to place your first order!</p>
-            </div>
-          ) : (
-            <div className="space-y-6">
-              {orders.map((order) => (
-                <div key={order.id} className="bg-white rounded-lg shadow-md p-6">
-                  <div className="flex flex-col md:flex-row md:justify-between md:items-start mb-4">
-                    <div>
-                      <h3 className="text-xl font-bold text-gray-900 mb-2">Order #{order.id}</h3>
-                      <p className="text-sm text-gray-600">
-                        Date: {new Date(order.created_at).toLocaleDateString('en-US', { 
-                          year: 'numeric', 
-                          month: 'long', 
-                          day: 'numeric',
-                          hour: '2-digit',
-                          minute: '2-digit'
-                        })}
-                      </p>
-                    </div>
-                    <div className="mt-2 md:mt-0">
-                      <p className="text-2xl font-bold text-green-600">{parseFloat(order.total_price).toFixed(2)} EGP</p>
-                    </div>
-                  </div>
-                  
-                  <div className="border-t border-gray-200 pt-4 mt-4">
-                    <h4 className="font-semibold text-gray-900 mb-3">Customer Information:</h4>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-                      <div>
-                        <p className="text-gray-600">Name:</p>
-                        <p className="font-medium text-gray-900">{order.customer_name || 'N/A'}</p>
-                      </div>
-                      <div>
-                        <p className="text-gray-600">Phone:</p>
-                        <p className="font-medium text-gray-900">{order.customer_phone || 'N/A'}</p>
-                      </div>
-                      <div>
-                        <p className="text-gray-600">Address:</p>
-                        <p className="font-medium text-gray-900">{order.customer_address || 'N/A'}</p>
-                      </div>
-                    </div>
-                  </div>
-
-                  {order.items && order.items.length > 0 && (
-                    <div className="border-t border-gray-200 pt-4 mt-4">
-                      <h4 className="font-semibold text-gray-900 mb-3">Order Items:</h4>
-                      <div className="space-y-2">
-                        {order.items.map((item, idx) => (
-                          <div key={idx} className="flex justify-between items-center py-2 border-b border-gray-100 last:border-0">
-                            <div className="flex-1">
-                              <p className="font-medium text-gray-900">
-                                {item.product?.name || 'Product'}
-                              </p>
-                              <p className="text-sm text-gray-600">
-                                Quantity: {item.quantity} × {item.product?.price ? parseFloat(item.product.price).toFixed(2) : '0.00'} EGP
-                              </p>
-                            </div>
-                            <p className="font-semibold text-gray-900">
-                              {(item.quantity * (item.product?.price ? parseFloat(item.product.price) : 0)).toFixed(2)} EGP
-                            </p>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      </section>
 
       {/* CTA Section */}
       <section className="py-20 bg-green-600">
@@ -830,11 +711,10 @@ export default function PlantShop() {
             <div>
               <h3 className="font-bold mb-3">Menu</h3>
               <nav className="space-y-2">
-                <button onClick={() => { setShowOrders(false); scrollToSection('home'); }} className="block text-gray-400 hover:text-white text-left">Home</button>
-                <button onClick={() => { setShowOrders(false); scrollToSection('shop'); }} className="block text-gray-400 hover:text-white text-left">Shop</button>
-                <button onClick={() => { setShowOrders(false); scrollToSection('about'); }} className="block text-gray-400 hover:text-white text-left">About</button>
-                <button onClick={() => { setShowOrders(true); scrollToSection('orders'); }} className="block text-gray-400 hover:text-white text-left">Orders</button>
-                <button onClick={() => { setShowOrders(false); scrollToSection('contact'); }} className="block text-gray-400 hover:text-white text-left">Contact</button>
+                <button onClick={() => scrollToSection('home')} className="block text-gray-400 hover:text-white text-left">Home</button>
+                <button onClick={() => scrollToSection('shop')} className="block text-gray-400 hover:text-white text-left">Shop</button>
+                <button onClick={() => scrollToSection('about')} className="block text-gray-400 hover:text-white text-left">About</button>
+                <button onClick={() => scrollToSection('contact')} className="block text-gray-400 hover:text-white text-left">Contact</button>
               </nav>
             </div>
             <div>
